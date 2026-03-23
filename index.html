@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0d0d0f">
+  <title>NewLifeManage</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── AUTH SCREEN ── -->
+  <div id="auth-screen" class="hidden">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="logo-mark large"></div>
+      </div>
+      <h1 class="auth-title">NewLife<span>Manage</span></h1>
+      <p class="auth-sub">Командний менеджер заходів</p>
+      <button class="google-btn" onclick="signInWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        Увійти через Google
+      </button>
+      <p class="auth-note">Тільки учасники команди мають доступ</p>
+    </div>
+  </div>
+
+  <!-- ── MAIN APP ── -->
+  <div id="app" class="hidden">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-mark"></div>
+        <div>
+          <h1 class="app-title">NewLife<span>Manage</span></h1>
+          <p class="app-sub" id="event-duration">Захід · 120 хв</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="view-toggle">
+          <button class="toggle-btn active" id="btn-pie" onclick="switchView('pie')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v7l5 3A6 6 0 1 1 8 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="toggle-btn" id="btn-linear" onclick="switchView('linear')">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="1" y="3" width="14" height="2.5" rx="1" fill="currentColor" opacity=".3"/><rect x="1" y="7" width="10" height="2.5" rx="1" fill="currentColor" opacity=".6"/><rect x="1" y="11" width="12" height="2.5" rx="1" fill="currentColor"/></svg>
+          </button>
+        </div>
+        <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()"></div>
+      </div>
+    </header>
+
+    <!-- User Menu -->
+    <div class="user-menu hidden" id="user-menu">
+      <div class="user-info">
+        <div class="user-info-avatar" id="menu-avatar"></div>
+        <div>
+          <div class="user-info-name" id="menu-name"></div>
+          <div class="user-info-email" id="menu-email"></div>
+        </div>
+      </div>
+      <button class="signout-btn" onclick="signOut()">Вийти</button>
+    </div>
+
+    <!-- Chart Section -->
+    <section class="chart-section">
+      <div id="chart-pie" class="chart-container">
+        <canvas id="pieCanvas"></canvas>
+        <div class="pie-center">
+          <span id="pie-total">0</span>
+          <span class="pie-unit">хв</span>
+        </div>
+      </div>
+      <div id="chart-linear" class="chart-container hidden">
+        <div id="linear-chart"></div>
+      </div>
+    </section>
+
+    <!-- Legend -->
+    <section class="legend-section" id="legend-list"></section>
+
+    <!-- Add Task Button -->
+    <div style="padding: 8px 20px 0; display:flex; justify-content:flex-end;">
+      <button class="add-task-btn" onclick="openModal()">+ Додати частину</button>
+    </div>
+
+    <!-- Persons Section -->
+    <section class="persons-section">
+      <div class="section-header">
+        <h2 class="section-title">Команда</h2>
+        <button class="text-btn" onclick="openPersonModal()">+ Додати</button>
+      </div>
+      <div id="persons-grid" class="persons-grid"></div>
+    </section>
+
+    <!-- Tasks Section -->
+    <section class="tasks-section">
+      <div class="section-header">
+        <h2 class="section-title">Частини заходу</h2>
+      </div>
+      <div id="tasks-list" class="tasks-list"></div>
+    </section>
+
+  </div>
+
+  <!-- Add/Edit Task Modal -->
+  <div class="modal-overlay hidden" id="task-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Нова частина</h3>
+        <button class="close-btn" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Назва</label>
+        <input class="field-input" id="f-name" type="text" placeholder="напр. Прославлення">
+
+        <label class="field-label">Тривалість (хв)</label>
+        <input class="field-input" id="f-dur" type="number" min="1" max="300" placeholder="20">
+
+        <label class="field-label">Час початку</label>
+        <input class="field-input" id="f-time" type="text" placeholder="00:30">
+
+        <label class="field-label">Відповідальний</label>
+        <select class="field-input" id="f-person">
+          <option value="">— оберіть —</option>
+        </select>
+
+        <label class="field-label">Колір</label>
+        <div class="color-picker" id="color-picker"></div>
+        <input type="hidden" id="f-color" value="#5B8DEF">
+        <input type="hidden" id="f-edit-id" value="">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-danger hidden" id="delete-btn" onclick="deleteTask()">Видалити</button>
+        <button class="btn-primary" onclick="saveTask()">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Person Modal -->
+  <div class="modal-overlay hidden" id="person-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Новий учасник</h3>
+        <button class="close-btn" onclick="closePersonModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Ім'я</label>
+        <input class="field-input" id="p-name" type="text" placeholder="напр. Андрій">
+        <label class="field-label">Роль / Обов'язки</label>
+        <input class="field-input" id="p-role" type="text" placeholder="напр. Ігри">
+      </div>
+      <div class="modal-footer">
+        <button class="btn-primary" onclick="savePerson()">Зберегти</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
